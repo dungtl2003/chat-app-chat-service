@@ -1,0 +1,41 @@
+{
+    "name": "chat-app-chat-service",
+    "version": "1.0.0",
+    "description": "service that supports messaging",
+    "main": "src/index.ts",
+    "author": "dungtl2003",
+    "repository": {
+        "type": "git",
+        "url": "git+https://github.com/dungtl2003/chat-app-chat-service.git"
+    },
+    "license": "MIT",
+    "homepage": "https://github.com/dungtl2003/chat-app-chat-service.git#readme",
+    "keywords": [
+        "typescript",
+        "chat",
+        "microservice",
+        "express"
+    ],
+    "scripts": {
+        "prepare": "husky",
+        "build": "npx tsc",
+        "start": "node dist/index.js",
+        "dev": "nodemon src/index.ts"
+    },
+    "dependencies": {
+        "dotenv": "^16.4.5",
+        "express": "^4.19.2"
+    },
+    "devDependencies": {
+        "@types/express": "^4.17.21",
+        "@types/node": "^20.14.11",
+        "eslint": "^9.7.0",
+        "eslint-config-prettier": "^9.1.0",
+        "husky": "^9.1.1",
+        "lint-staged": "^15.2.7",
+        "nodemon": "^3.1.4",
+        "prisma": "^5.17.0",
+        "ts-node": "^10.9.2",
+        "typescript": "^5.5.3"
+    }
+}
