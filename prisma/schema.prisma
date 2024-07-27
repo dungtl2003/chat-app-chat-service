@@ -54,8 +54,9 @@ model User {
     phoneNumber String @db.Text @map("phone_number")
     privacy String? @db.Text
     isActive Boolean @map("is_active")
+    lastActiveAt DateTime @default(now()) @map("last_active_at")
     avatarUrl String? @db.Text @map("avatar_url")
-    refreshToken String? @db.Text @map("refresh_token")
+    refreshTokens String[] @db.Text @map("refresh_tokens")
 
     participants Participant[]
     messages Message[]
@@ -101,7 +102,7 @@ model Participant {
     conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
     conversationId String @db.Text @map("conversation_id")
 
-    joinedAt DateTime? @default(now()) @map("joined_at")
+    joinedAt DateTime @default(now()) @map("joined_at")
     leftAt DateTime? @map("left_at")
 
     @@map("participant")
