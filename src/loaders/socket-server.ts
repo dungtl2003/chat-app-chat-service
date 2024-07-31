@@ -7,6 +7,7 @@ import {
 } from "@/common/constants";
 import config from "@/common/config";
 import {ExtendedError} from "socket.io/dist/namespace";
+import {debug, info} from "@/common/console";
 
 interface Option {
     debug: boolean;
@@ -28,7 +29,7 @@ class SocketServer {
     }
 
     private debug(msg: string): void {
-        this._debug && console.debug(`[socket server]: ${msg}`);
+        this._debug && debug(`[socket server]: ${msg}`);
     }
 
     private async auth(
@@ -66,14 +67,14 @@ class SocketServer {
                 });
             });
 
-        console.log("[socket server]: Server is listening");
+        info("[socket server]: Server is listening");
     }
 
     public close(): void {
         this._io.close((error) => {
             if (error) throw error;
 
-            console.log("[socket server]: Stopped");
+            info("[socket server]: Stopped");
         });
     }
 }

@@ -2,6 +2,7 @@ import express, {Express} from "express";
 import config from "@/common/config";
 import {createServer, Server} from "node:http";
 import cors from "cors";
+import {info} from "@/common/console";
 
 class ExpressServer {
     private static readonly PORT = 8000;
@@ -21,9 +22,7 @@ class ExpressServer {
         this._port = config.serverPort || ExpressServer.PORT;
         this._server = createServer(this._app);
         this._server.listen(this._port, () => {
-            console.log(
-                `[express server]: Server is running at port ${this._port}`
-            );
+            info(`[express server]: Server is running at port ${this._port}`);
         });
     }
 
@@ -31,7 +30,7 @@ class ExpressServer {
         this._server.close((error) => {
             if (error) throw error;
 
-            console.log("[express server]: Stopped");
+            info("[express server]: Stopped");
         });
     }
 
