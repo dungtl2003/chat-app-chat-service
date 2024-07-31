@@ -41,8 +41,13 @@ enum MessageType {
     POLL // message contains polls or surveys
 }
 
+enum UserStatus {
+    ONLINE
+    OFFLINE
+}
+
 model User {
-    id String @id @db.Text
+    id BigInt @id @db.BigInt
     email String @db.Text @unique
     username String @db.Text @unique
     firstName String @db.Text @map("first_name")
@@ -53,7 +58,7 @@ model User {
     role Role
     phoneNumber String @db.Text @map("phone_number")
     privacy String? @db.Text
-    isActive Boolean @map("is_active")
+    status UserStatus
     lastActiveAt DateTime @default(now()) @map("last_active_at")
     avatarUrl String? @db.Text @map("avatar_url")
     refreshTokens String[] @db.Text @map("refresh_tokens")
@@ -69,7 +74,7 @@ model User {
 }
 
 model Conversation {
-    id String @id @db.Text
+    id BigInt @id @db.BigInt
     type ConversationType
 
     createdAt DateTime @default(now()) @map("created_at")
@@ -83,9 +88,9 @@ model Conversation {
 }
 
 model Group {
-    id String @id @db.Text
+    id BigInt @id @db.BigInt
     conversation Conversation @relation(fields: [id], references: [id], onDelete: Cascade) 
-    creatorId String @db.Text @map("creator_id")
+    creatorId BigInt @db.BigInt @map("creator_id")
     name String @db.Text
     avatarUrl String? @db.Text @map("avatar_url")
     permission String? @db.Text
@@ -96,11 +101,11 @@ model Group {
 }
 
 model Participant {
-    id String @id @db.Text
+    id BigInt @id @db.BigInt
     user User @relation(fields: [userId], references: [id], onDelete: Cascade)
-    userId String @db.Text @map("user_id")
+    userId BigInt @db.BigInt @map("user_id")
     conversation Conversation @relation(fields: [conversationId], references: [id], onDelete: Cascade)
-    conversationId String @db.Text @map("conversation_id")
+    conversationId BigInt @db.BigInt @map("conversation_id")
 
     joinedAt DateTime @default(now()) @map("joined_at")
     leftAt DateTime? @map("left_at")
@@ -109,11 +114,11 @@ model Participant {
 }
 
 model Message {
-    id String @id @db.Text
+    id BigInt @id @db.BigInt
     sender User @relation(fields: [senderId], references: [id], onDelete: Cascade)
-    senderId String @db.Text 
+    senderId BigInt @db.BigInt 
     receiver Conversation @relation(fields: [receiverId], references: [id], onDelete: Cascade)
-    receiverId String @db.Text
+    receiverId BigInt @db.BigInt
     message String @db.Text
     type MessageType
 
@@ -127,9 +132,9 @@ model Message {
 }
 
 model Attachment {
-    id String @id @db.Text
+    id BigInt @id @db.BigInt
     message Message @relation(fields: [messageId], references: [id], onDelete: Cascade)
-    messageId String @db.Text @map("message_id")
+    messageId BigInt @db.BigInt @map("message_id")
     thumbUrl String @db.Text @map("thumb_url") // thumbnail for image or video
     fileUrl String @db.Text @map("file_url")
 

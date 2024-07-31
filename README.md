@@ -28,16 +28,28 @@ npm install
 
 you need to have `.env` file in root project, in the file you need `key=value` each line. See list of required environment variables [here](#-list-of-available-environment-variables):<br>
 
-to update your database schema, first, start your database, then run this command:
+to update your database schema, first, start your database, then if you want to update your dev environment, run this command:
 
 ```bash
-npx prisma db push
+npx prisma db push --schema=./environments/dev/schema.prisma
+```
+
+or if you want to update your prod environment, run this:
+
+```bash
+npx prisma db push --schema=./environments/prod/schema.prisma
 ```
 
 ## ⇁ List of available environment variables
 
-| Variable | Required | Purpose |
-| -------- | -------- | ------- |
+| Variable              | Required | Purpose                        |
+| --------------------- | -------- | ------------------------------ |
+| PORT                  | NO       | server's port. Default: `8010` |
+| AUTH_SERVICE_ENDPOINT | YES      | endpoint for auth service      |
+| CLIENT_ENDPOINT       | YES      | endpoint for client app        |
+| DATABASE_URL          | YES      | URL to your database           |
+
+you can check for an example [here](./templates/.env.template)<br>
 
 ## ⇁ Getting Started
 

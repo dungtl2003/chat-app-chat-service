@@ -20,7 +20,7 @@ if (isEnvFound.error) {
 }
 info(`Load .env from ${ENV_FILE_PATH}`);
 
-process.env.PORT = process.env.PORT || "8000";
+process.env.PORT = process.env.PORT || "8010";
 process.env.AUTH_SERVICE_ENDPOINT = process.env.AUTH_SERVICE_ENDPOINT || "";
 process.env.CLIENT_ENDPOINT = process.env.CLIENT_ENDPOINT || "";
 
