@@ -12,15 +12,14 @@ class ExpressServer {
     private _port: number;
 
     public constructor() {
-        this.listen();
-    }
-
-    private listen(): void {
         this._app = express();
         this._app.use(cors());
 
         this._port = config.serverPort || ExpressServer.PORT;
         this._server = createServer(this._app);
+    }
+
+    public listen(): void {
         this._server.listen(this._port, () => {
             info(`[express server]: Server is running at port ${this._port}`);
         });

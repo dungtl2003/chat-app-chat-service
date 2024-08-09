@@ -41,3 +41,11 @@ export function debug(message?: any, ...optionalParams: any[]): void {
         : console.debug(message);
     process.stdout.write(reset);
 }
+
+export function warn(message?: any, ...optionalParams: any[]): void {
+    process.stdout.write(fgRed);
+    optionalParams && optionalParams.length > 0
+        ? console.warn(message, optionalParams)
+        : console.warn(message);
+    process.stdout.write(reset);
+}
