@@ -19,7 +19,7 @@ class KafkaConsumer {
     private readonly _debug: boolean;
 
     constructor(kafka: Kafka, config: ConsumerConfig, opts?: Option) {
-        this._debug = opts?.debug || false;
+        this._debug = opts?.debug ?? false;
         this._consumer = kafka.consumer({
             partitionAssigners: [PartitionAssigners.roundRobin],
             sessionTimeout: 30000,

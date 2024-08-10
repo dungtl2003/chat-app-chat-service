@@ -27,7 +27,7 @@ class Kafka {
                     return true;
                 },
             },
-            logLevel: opts?.logLevel || logLevel.INFO,
+            logLevel: opts?.logLevel ?? logLevel.INFO,
             ...config,
         });
     }

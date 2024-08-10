@@ -15,7 +15,7 @@ class ExpressServer {
         this._app = express();
         this._app.use(cors());
 
-        this._port = config.serverPort || ExpressServer.PORT;
+        this._port = config.serverPort ?? ExpressServer.PORT;
         this._server = createServer(this._app);
     }
 

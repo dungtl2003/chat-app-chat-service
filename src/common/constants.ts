@@ -1,18 +1,28 @@
 export enum SocketEvent {
-    CONNECT = "connection",
+    CONNECTION = "connection",
+    CONNECT = "connect",
     DISCONNECT = "disconnect",
     CHAT = "chat",
-    JOIN_ROOMS = "join rooms",
+    JOIN_ROOMS = "joinRooms",
 }
 
 export enum SocketNamespace {
     MESSAGE = "message",
 }
 
-export enum SocketStatusMessage {
-    AUTHORIZATION_FAILED = "Authorization failed",
+export enum SocketStatus {
+    OK = "ok",
+    SEND_FAILED = "send failed",
+    RECEIVED = "received",
+    AUTHORIZATION_FAILED = "authorization failed",
 }
 
 export enum TOPIC {
     CHAT = "chat",
 }
+
+export type AckMessage =
+    | "ok"
+    | "not allowed"
+    | "failed"
+    | "wrong message format";

@@ -11,20 +11,16 @@ export default () => {
     const expressServer = new ExpressServer();
     const kafka = new Kafka(
         {
-            brokers: ["localhost:29092"],
+            brokers: ["localhost:9092"],
         },
         {
             debug: true,
             logLevel: logLevel.INFO,
         }
     );
-    const producer = new KafkaProducer(
-        kafka.instance(),
-        {},
-        {
-            debug: true,
-        }
-    );
+    const producer = new KafkaProducer(kafka.instance(), {
+        debug: true,
+    });
     const consumer = new KafkaConsumer(
         kafka.instance(),
         {
@@ -38,7 +34,7 @@ export default () => {
         consumer,
         {
             debug: true,
-            needAuth: true,
+            needAuth: false,
         }
     );
 

@@ -2,6 +2,7 @@ import {debug, info} from "@/common/console";
 import {Kafka, Producer, ProducerConfig, ProducerRecord} from "kafkajs";
 
 interface Option {
+    config?: ProducerConfig;
     debug?: boolean;
 }
 
@@ -9,14 +10,14 @@ class KafkaProducer {
     private readonly _producer: Producer;
     private readonly _debug: boolean;
 
-    constructor(kafka: Kafka, config: ProducerConfig, opts?: Option) {
-        this._debug = opts?.debug || false;
+    constructor(kafka: Kafka, opts?: Option) {
+        this._debug = opts?.debug ?? false;
         this._producer = kafka.producer({
             metadataMaxAge: 5 * 60 * 60,
             allowAutoTopicCreation: false,
             transactionTimeout: 60000,
             idempotent: true,
-            ...config,
+            ...opts?.config,
         });
     }
 

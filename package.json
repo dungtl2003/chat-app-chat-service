@@ -20,7 +20,8 @@
         "prepare": "husky",
         "build": "npx tsc",
         "start": "node dist/index.js",
-        "dev": "nodemon"
+        "dev": "tsx ./src/index.ts",
+        "test": "mocha test/**/*.spec.ts --reporter mocha-junit-reporter --timeout 60000 --exit"
     },
     "dependencies": {
         "@prisma/client": "^5.17.0",
@@ -31,16 +32,23 @@
         "socket.io": "^4.7.5"
     },
     "devDependencies": {
+        "@types/chai": "^4.3.17",
         "@types/express": "^4.17.21",
+        "@types/mocha": "^10.0.7",
         "@types/node": "^20.14.11",
+        "chai": "^5.1.1",
         "eslint": "^9.7.0",
         "eslint-config-prettier": "^9.1.0",
         "husky": "^9.1.1",
         "lint-staged": "^15.2.7",
+        "mocha": "^10.7.3",
+        "mocha-junit-reporter": "^2.2.1",
         "nodemon": "^3.1.4",
         "prisma": "^5.17.0",
-        "ts-node": "^10.9.2",
+        "socket.io-client": "^4.7.5",
+        "ts-mocha": "^10.0.0",
         "tsconfig-paths": "^4.2.0",
+        "tsx": "^4.17.0",
         "typescript": "^5.5.3"
     }
 }

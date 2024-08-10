@@ -29,7 +29,7 @@ const bgGray = "\x1b[100m";
 export function info(message?: any, ...optionalParams: any[]): void {
     process.stdout.write(fgGreen);
     optionalParams && optionalParams.length > 0
-        ? console.info(message, optionalParams)
+        ? console.info(message, ...optionalParams)
         : console.info(message);
     process.stdout.write(reset);
 }
@@ -37,7 +37,7 @@ export function info(message?: any, ...optionalParams: any[]): void {
 export function debug(message?: any, ...optionalParams: any[]): void {
     process.stdout.write(fgYellow);
     optionalParams && optionalParams.length > 0
-        ? console.debug(message, optionalParams)
+        ? console.debug(message, ...optionalParams)
         : console.debug(message);
     process.stdout.write(reset);
 }
@@ -45,7 +45,7 @@ export function debug(message?: any, ...optionalParams: any[]): void {
 export function warn(message?: any, ...optionalParams: any[]): void {
     process.stdout.write(fgRed);
     optionalParams && optionalParams.length > 0
-        ? console.warn(message, optionalParams)
+        ? console.warn(message, ...optionalParams)
         : console.warn(message);
     process.stdout.write(reset);
 }
