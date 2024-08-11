@@ -20,13 +20,12 @@
         "prepare": "husky",
         "build": "npx tsc",
         "start": "node dist/index.js",
-        "dev": "tsx ./src/index.ts",
-        "test": "mocha test/**/*.spec.ts --reporter mocha-junit-reporter --timeout 60000 --exit"
+        "dev": ".ENV_FILE=.env.dev /scripts/run.sh tsx ./src/index.ts",
+        "test": "ENV_FILE=.env.test ./scripts/run.sh mocha test/**/*.spec.ts --reporter mocha-junit-reporter --timeout 60000 --exit"
     },
     "dependencies": {
         "@prisma/client": "^5.17.0",
         "cors": "^2.8.5",
-        "dotenv": "^16.4.5",
         "express": "^4.19.2",
         "kafkajs": "^2.2.4",
         "socket.io": "^4.7.5"
@@ -43,11 +42,9 @@
         "lint-staged": "^15.2.7",
         "mocha": "^10.7.3",
         "mocha-junit-reporter": "^2.2.1",
-        "nodemon": "^3.1.4",
         "prisma": "^5.17.0",
         "socket.io-client": "^4.7.5",
         "ts-mocha": "^10.0.0",
-        "tsconfig-paths": "^4.2.0",
         "tsx": "^4.17.0",
         "typescript": "^5.5.3"
     }

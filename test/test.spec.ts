@@ -4,10 +4,16 @@ import SocketServer from "@/loaders/socket-server";
 import Kafka from "@/loaders/kafka";
 import KafkaProducer from "@/loaders/producer";
 import KafkaConsumer from "@/loaders/consumer";
-import {AckMessage, SocketEvent, TOPIC} from "@/common/constants";
+import {
+    AckMessage,
+    SocketEvent,
+    SocketNamespace,
+    TOPIC,
+} from "@/common/constants";
 import {ClientToServerEvents, ServerToClientEvents} from "@/common/types";
 import ExpressServer from "@/loaders/express-server";
 import {Message, MessageType} from "@prisma/client";
+import config from "@/common/config";
 
 function serialize(message: Message): string {
     return JSON.stringify(message, (_, value) =>
@@ -39,7 +45,7 @@ describe("this service", () => {
         expressServer = new ExpressServer();
         producer = new KafkaProducer(kafka.instance());
         consumer = new KafkaConsumer(kafka.instance(), {
-            groupId: "1",
+            groupId: config.nodeId,
         });
         socketServer = new SocketServer(
             expressServer.instance(),
@@ -58,10 +64,18 @@ describe("this service", () => {
     });
 
     beforeEach("run new clients and connect to socket servers", async () => {
-        clientSocket1 = ioc(`http://localhost:8030/message`);
-        clientSocket2 = ioc(`http://localhost:8030/message`);
-        clientSocket3 = ioc(`http://localhost:8030/message`);
-        clientSocket4 = ioc(`http://localhost:8030/message`);
+        clientSocket1 = ioc(
+            `http://localhost:${config.serverPort}/${SocketNamespace.MESSAGE}`
+        );
+        clientSocket2 = ioc(
+            `http://localhost:${config.serverPort}/${SocketNamespace.MESSAGE}`
+        );
+        clientSocket3 = ioc(
+            `http://localhost:${config.serverPort}/${SocketNamespace.MESSAGE}`
+        );
+        clientSocket4 = ioc(
+            `http://localhost:${config.serverPort}/${SocketNamespace.MESSAGE}`
+        );
 
         await Promise.all([
             new Promise((resolve) =>

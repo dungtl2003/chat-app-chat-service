@@ -11,7 +11,7 @@ export default () => {
     const expressServer = new ExpressServer();
     const kafka = new Kafka(
         {
-            brokers: ["localhost:9092"],
+            brokers: ["localhost:9092"], // TODO: cannot use fixed value like this!!!
         },
         {
             debug: true,
