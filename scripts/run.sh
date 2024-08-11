@@ -1,9 +1,10 @@
 #!/usr/bin/bash
 
-ENV_FILE=${ENV_FILE:-".env"};
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 ROOT_DIR="$SCRIPT_DIR/.."
-ENV_PATH="$ROOT_DIR/$ENV_FILE"
+
+ENV=${ENV:-"dev"};
+ENV_PATH=${ENV_PATH:-"$ROOT_DIR/environments/$ENV/.env"}
 
 export_envs() {
     for line in "${lines[@]}"; do

@@ -40,7 +40,7 @@ describe("this service", () => {
 
     before("run all necessery servers", async () => {
         const kafka = new Kafka({
-            brokers: ["localhost:9092"],
+            brokers: ["localhost:9092", "localhost:10092", "localhost:11092"],
         });
         expressServer = new ExpressServer();
         producer = new KafkaProducer(kafka.instance());

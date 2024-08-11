@@ -8,7 +8,6 @@ this is a service that supports messaging<br>
 [setup](#-setup)<br>
 [getting started](#-getting-started)<br>
 [run test (comming soon)](#-run-test)<br>
-[database schema](#-database-schema)<br>
 [learn more](#-learn-more)<br>
 [deployment (comming soon)](#-deploy-on-vercel)<br>
 
@@ -60,7 +59,3 @@ npm run dev
 ```
 
 ## ⇁ Run test
-
-## ⇁ Database schema
-
-![Schema](./assets/db_schema.png)

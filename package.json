@@ -20,8 +20,8 @@
         "prepare": "husky",
         "build": "npx tsc",
         "start": "node dist/index.js",
-        "dev": ".ENV_FILE=.env.dev /scripts/run.sh tsx ./src/index.ts",
-        "test": "ENV_FILE=.env.test ./scripts/run.sh mocha test/**/*.spec.ts --reporter mocha-junit-reporter --timeout 60000 --exit"
+        "dev": ".ENV=dev /scripts/run.sh tsx ./src/index.ts",
+        "test": "ENV=test ./scripts/run.sh mocha tests/**/*.spec.ts --reporter mocha-junit-reporter --timeout 60000 --exit"
     },
     "dependencies": {
         "@prisma/client": "^5.17.0",
