@@ -13,7 +13,6 @@ import {
 import {ClientToServerEvents, ServerToClientEvents} from "@/common/types";
 import ExpressServer from "@/loaders/express-server";
 import {Message, MessageType} from "@prisma/client";
-import config from "@/common/config";
 
 function serialize(message: Message): string {
     return JSON.stringify(message, (_, value) =>
@@ -22,79 +21,160 @@ function serialize(message: Message): string {
 }
 
 describe("this service", () => {
-    let socketServer: SocketServer;
-    let producer: KafkaProducer;
-    let consumer: KafkaConsumer;
-    let expressServer: ExpressServer;
-    let clientSocket1: ClientSocket<ServerToClientEvents, ClientToServerEvents>;
-    let clientSocket2: ClientSocket<ServerToClientEvents, ClientToServerEvents>;
-    let clientSocket3: ClientSocket<ServerToClientEvents, ClientToServerEvents>;
-    let clientSocket4: ClientSocket<ServerToClientEvents, ClientToServerEvents>;
+    let socketServer1: SocketServer;
+    let socketServer2: SocketServer;
+
+    let producer1: KafkaProducer;
+    let producer2: KafkaProducer;
+
+    let consumer1: KafkaConsumer;
+    let consumer2: KafkaConsumer;
+
+    let expressServer1: ExpressServer;
+    let expressServer2: ExpressServer;
+
+    let clientSocket11: ClientSocket<
+        ServerToClientEvents,
+        ClientToServerEvents
+    >;
+    let clientSocket12: ClientSocket<
+        ServerToClientEvents,
+        ClientToServerEvents
+    >;
+    let clientSocket13: ClientSocket<
+        ServerToClientEvents,
+        ClientToServerEvents
+    >;
+    let clientSocket14: ClientSocket<
+        ServerToClientEvents,
+        ClientToServerEvents
+    >;
+
+    let clientSocket21: ClientSocket<
+        ServerToClientEvents,
+        ClientToServerEvents
+    >;
+    let clientSocket22: ClientSocket<
+        ServerToClientEvents,
+        ClientToServerEvents
+    >;
 
     async function joinRooms() {
-        await clientSocket1.emitWithAck(SocketEvent.JOIN_ROOMS, ["1", "2"]);
-        await clientSocket2.emitWithAck(SocketEvent.JOIN_ROOMS, ["2", "3"]);
-        await clientSocket3.emitWithAck(SocketEvent.JOIN_ROOMS, ["2"]);
-        await clientSocket4.emitWithAck(SocketEvent.JOIN_ROOMS, ["1"]);
+        await clientSocket11.emitWithAck(SocketEvent.JOIN_ROOMS, ["1", "2"]);
+        await clientSocket12.emitWithAck(SocketEvent.JOIN_ROOMS, ["2", "3"]);
+        await clientSocket13.emitWithAck(SocketEvent.JOIN_ROOMS, ["2"]);
+        await clientSocket14.emitWithAck(SocketEvent.JOIN_ROOMS, ["1"]);
+
+        await clientSocket21.emitWithAck(SocketEvent.JOIN_ROOMS, ["1", "2"]);
+        await clientSocket22.emitWithAck(SocketEvent.JOIN_ROOMS, ["3"]);
     }
 
     before("run all necessery servers", async () => {
         const kafka = new Kafka({
             brokers: ["localhost:9092", "localhost:10092", "localhost:11092"],
         });
-        expressServer = new ExpressServer();
-        producer = new KafkaProducer(kafka.instance());
-        consumer = new KafkaConsumer(kafka.instance(), {
-            groupId: config.nodeId,
+
+        expressServer1 = new ExpressServer({port: 8020});
+        expressServer2 = new ExpressServer({port: 8030});
+
+        producer1 = new KafkaProducer(kafka.instance());
+        producer2 = new KafkaProducer(kafka.instance());
+
+        consumer1 = new KafkaConsumer(kafka.instance(), {
+            groupId: "1",
         });
-        socketServer = new SocketServer(
-            expressServer.instance(),
-            producer,
-            consumer,
+        consumer2 = new KafkaConsumer(kafka.instance(), {
+            groupId: "2",
+        });
+
+        socketServer1 = new SocketServer(
+            expressServer1.instance(),
+            producer1,
+            consumer1,
+            "http://localhost:8000",
+            "http://localhost:8010/api/v1/auth/authorize",
             {
+                nodeId: "1",
+                needAuth: false,
+                debug: true,
+            }
+        );
+        socketServer2 = new SocketServer(
+            expressServer2.instance(),
+            producer2,
+            consumer2,
+            "http://localhost:8000",
+            "http://localhost:8010/api/v1/auth/authorize",
+            {
+                nodeId: "2",
                 needAuth: false,
                 debug: true,
             }
         );
 
-        expressServer.listen();
-        socketServer.listen();
-        await producer.startProducing();
-        await consumer.startConsuming({topics: [TOPIC.CHAT]});
+        expressServer1.listen();
+        socketServer1.listen();
+
+        expressServer2.listen();
+        socketServer2.listen();
+
+        await producer1.startProducing();
+        await consumer1.startConsuming({topics: [TOPIC.CHAT]});
+
+        await producer2.startProducing();
+        await consumer2.startConsuming({topics: [TOPIC.CHAT]});
     });
 
     beforeEach("run new clients and connect to socket servers", async () => {
-        clientSocket1 = ioc(
-            `http://localhost:${config.serverPort}/${SocketNamespace.MESSAGE}`
+        clientSocket11 = ioc(
+            `http://localhost:8020/${SocketNamespace.MESSAGE}`
         );
-        clientSocket2 = ioc(
-            `http://localhost:${config.serverPort}/${SocketNamespace.MESSAGE}`
+        clientSocket12 = ioc(
+            `http://localhost:8020/${SocketNamespace.MESSAGE}`
         );
-        clientSocket3 = ioc(
-            `http://localhost:${config.serverPort}/${SocketNamespace.MESSAGE}`
+        clientSocket13 = ioc(
+            `http://localhost:8020/${SocketNamespace.MESSAGE}`
         );
-        clientSocket4 = ioc(
-            `http://localhost:${config.serverPort}/${SocketNamespace.MESSAGE}`
+        clientSocket14 = ioc(
+            `http://localhost:8020/${SocketNamespace.MESSAGE}`
+        );
+
+        clientSocket21 = ioc(
+            `http://localhost:8030/${SocketNamespace.MESSAGE}`
+        );
+        clientSocket22 = ioc(
+            `http://localhost:8030/${SocketNamespace.MESSAGE}`
         );
 
         await Promise.all([
             new Promise((resolve) =>
-                clientSocket1.on(SocketEvent.CONNECT, () => {
+                clientSocket11.on(SocketEvent.CONNECT, () => {
                     resolve("");
                 })
             ),
             new Promise((resolve) =>
-                clientSocket2.on(SocketEvent.CONNECT, () => {
+                clientSocket12.on(SocketEvent.CONNECT, () => {
                     resolve("");
                 })
             ),
             new Promise((resolve) =>
-                clientSocket3.on(SocketEvent.CONNECT, () => {
+                clientSocket13.on(SocketEvent.CONNECT, () => {
                     resolve("");
                 })
             ),
             new Promise((resolve) =>
-                clientSocket4.on(SocketEvent.CONNECT, () => {
+                clientSocket14.on(SocketEvent.CONNECT, () => {
+                    resolve("");
+                })
+            ),
+
+            new Promise((resolve) =>
+                clientSocket21.on(SocketEvent.CONNECT, () => {
+                    resolve("");
+                })
+            ),
+            new Promise((resolve) =>
+                clientSocket22.on(SocketEvent.CONNECT, () => {
                     resolve("");
                 })
             ),
@@ -102,20 +182,27 @@ describe("this service", () => {
     });
 
     afterEach("close clients's connection with socket servers", () => {
-        clientSocket1.disconnect();
-        clientSocket2.disconnect();
-        clientSocket3.disconnect();
-        clientSocket4.disconnect();
+        clientSocket11.disconnect();
+        clientSocket12.disconnect();
+        clientSocket13.disconnect();
+        clientSocket14.disconnect();
+
+        clientSocket21.disconnect();
+        clientSocket22.disconnect();
     });
 
     after("shutdown all servers", async () => {
-        await producer.disconnect();
-        await consumer.disconnect();
-        socketServer.close();
+        await producer1.disconnect();
+        await consumer1.disconnect();
+        socketServer1.close();
+
+        await producer2.disconnect();
+        await consumer2.disconnect();
+        socketServer2.close();
     });
 
     it("should add client to rooms", async () => {
-        const response: AckMessage = await clientSocket1.emitWithAck(
+        const response: AckMessage = await clientSocket11.emitWithAck(
             SocketEvent.JOIN_ROOMS,
             ["1", "2", "3"]
         );
@@ -124,7 +211,7 @@ describe("this service", () => {
     });
 
     it("should deny the message when client sent wrong message format", async () => {
-        const response: AckMessage = await clientSocket1.emitWithAck(
+        const response: AckMessage = await clientSocket11.emitWithAck(
             SocketEvent.CHAT,
             "this message will not work"
         );
@@ -147,16 +234,23 @@ describe("this service", () => {
             const serializedMessage = serialize(msg);
 
             await joinRooms();
-            clientSocket1.emitWithAck(SocketEvent.CHAT, serializedMessage);
+            clientSocket11.emitWithAck(SocketEvent.CHAT, serializedMessage);
             await Promise.all([
                 new Promise((resolve) => {
-                    clientSocket2.on(SocketEvent.CHAT, (response) => {
+                    clientSocket12.on(SocketEvent.CHAT, (response) => {
                         assert.strictEqual(response, serializedMessage);
                         resolve("");
                     });
                 }),
                 new Promise((resolve) => {
-                    clientSocket3.on(SocketEvent.CHAT, (response) => {
+                    clientSocket13.on(SocketEvent.CHAT, (response) => {
+                        assert.strictEqual(response, serializedMessage);
+                        resolve("");
+                    });
+                }),
+
+                new Promise((resolve) => {
+                    clientSocket21.on(SocketEvent.CHAT, (response) => {
                         assert.strictEqual(response, serializedMessage);
                         resolve("");
                     });
@@ -178,13 +272,13 @@ describe("this service", () => {
             const serializedMessage = serialize(msg);
 
             await joinRooms();
-            clientSocket1.emitWithAck(SocketEvent.CHAT, serializedMessage);
+            clientSocket11.emitWithAck(SocketEvent.CHAT, serializedMessage);
             await Promise.all([
                 new Promise((resolve, reject) => {
                     setTimeout(() => {
                         resolve("");
                     }, 5000);
-                    clientSocket1.on(SocketEvent.CHAT, (response) => {
+                    clientSocket11.on(SocketEvent.CHAT, (response) => {
                         if (response === serializedMessage) {
                             reject(
                                 "This client should not receive the message"
@@ -196,7 +290,19 @@ describe("this service", () => {
                     setTimeout(() => {
                         resolve("");
                     }, 5000);
-                    clientSocket4.on(SocketEvent.CHAT, (response) => {
+                    clientSocket14.on(SocketEvent.CHAT, (response) => {
+                        if (response === serializedMessage) {
+                            reject(
+                                "This client should not receive the message"
+                            );
+                        }
+                    });
+                }),
+                new Promise((resolve, reject) => {
+                    setTimeout(() => {
+                        resolve("");
+                    }, 5000);
+                    clientSocket22.on(SocketEvent.CHAT, (response) => {
                         if (response === serializedMessage) {
                             reject(
                                 "This client should not receive the message"

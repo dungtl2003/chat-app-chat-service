@@ -32,6 +32,8 @@ export default () => {
         expressServer.instance(),
         producer,
         consumer,
+        config.clientEndpoint,
+        config.authServiceEndpoint,
         {
             debug: true,
             needAuth: false,

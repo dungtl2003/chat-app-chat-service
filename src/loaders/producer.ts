@@ -1,5 +1,11 @@
 import {debug, info} from "@/common/console";
-import {Kafka, Producer, ProducerConfig, ProducerRecord} from "kafkajs";
+import {
+    Kafka,
+    Partitioners,
+    Producer,
+    ProducerConfig,
+    ProducerRecord,
+} from "kafkajs";
 
 interface Option {
     config?: ProducerConfig;
@@ -13,10 +19,14 @@ class KafkaProducer {
     constructor(kafka: Kafka, opts?: Option) {
         this._debug = opts?.debug ?? false;
         this._producer = kafka.producer({
+            createPartitioner: Partitioners.DefaultPartitioner,
             metadataMaxAge: 5 * 60 * 60,
             allowAutoTopicCreation: false,
             transactionTimeout: 60000,
             idempotent: true,
+            retry: {
+                retries: Number.MAX_SAFE_INTEGER,
+            },
             ...opts?.config,
         });
     }

@@ -1,8 +1,11 @@
 import express, {Express} from "express";
-import config from "@/common/config";
 import {createServer, Server} from "node:http";
 import cors from "cors";
 import {info} from "@/common/console";
+
+interface Option {
+    port?: number;
+}
 
 class ExpressServer {
     private static readonly PORT = 8000;
@@ -11,11 +14,11 @@ class ExpressServer {
     private _server: Server;
     private _port: number;
 
-    public constructor() {
+    public constructor(opts?: Option) {
         this._app = express();
         this._app.use(cors());
 
-        this._port = config.serverPort ?? ExpressServer.PORT;
+        this._port = opts?.port ?? ExpressServer.PORT;
         this._server = createServer(this._app);
     }
 

@@ -21,11 +21,12 @@
         "build": "npx tsc",
         "start": "node dist/index.js",
         "dev": ".ENV=dev /scripts/run.sh tsx ./src/index.ts",
-        "test": "ENV=test ./scripts/run.sh mocha tests/**/*.spec.ts --reporter mocha-junit-reporter --timeout 60000 --exit"
+        "test": "ENV=test ./scripts/test-with-kafka.sh mocha tests/**/*.spec.ts"
     },
     "dependencies": {
-        "@prisma/client": "^5.17.0",
+        "@prisma/client": "^5.18.0",
         "cors": "^2.8.5",
+        "execa": "^9.3.0",
         "express": "^4.19.2",
         "kafkajs": "^2.2.4",
         "socket.io": "^4.7.5"

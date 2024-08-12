@@ -21,6 +21,8 @@ export enum TOPIC {
     CHAT = "chat",
 }
 
+export type CallbackStatus = "OK" | "ERROR";
+
 export type AckMessage =
     | "ok"
     | "not allowed"

@@ -7,24 +7,25 @@ import {
     SocketStatus,
     TOPIC,
 } from "@/common/constants";
-import config from "@/common/config";
 import {ExtendedError} from "socket.io/dist/namespace";
 import {debug, info} from "@/common/console";
 import {EachMessagePayload} from "kafkajs";
 import KafkaProducer from "./producer";
 import KafkaConsumer from "./consumer";
-import {Message} from "@prisma/client";
+import {Message, PrismaClient} from "@prisma/client";
 import {
     ClientToServerEvents,
     InterServerEvents,
     ServerToClientEvents,
     SocketData,
 } from "@/common/types";
+import {listMessages} from "@/message/list";
 
 interface Option {
     config?: Partial<ServerOptions>;
     debug?: boolean;
     needAuth?: boolean;
+    nodeId?: string;
 }
 
 interface Metadata {
@@ -37,6 +38,8 @@ interface KafkaMessageRecord {
 }
 
 class SocketServer {
+    private readonly NODE_ID = "1";
+
     private readonly _io: Server<
         ClientToServerEvents,
         ServerToClientEvents,
@@ -46,11 +49,16 @@ class SocketServer {
     private readonly _producer: KafkaProducer;
     private readonly _debug: boolean;
     private readonly _needAuth: boolean;
+    private readonly _nodeId: string;
+    private readonly _authServiceEndpoint: string;
+    private readonly _db: PrismaClient;
 
     public constructor(
         expressServer: ExpressServer,
         producer: KafkaProducer,
         consumer: KafkaConsumer,
+        clientEndpoint: string,
+        authServiceEndpoint: string,
         opts?: Option
     ) {
         this._io = new Server<
@@ -70,7 +78,7 @@ class SocketServer {
             allowEIO3: false,
             allowUpgrades: true,
             cors: {
-                origin: config.clientEndpoint,
+                origin: clientEndpoint,
                 credentials: true,
             },
             maxHttpBufferSize: 1e6, // 1 MB
@@ -81,9 +89,12 @@ class SocketServer {
             ...opts?.config,
         });
 
+        this._db = new PrismaClient();
         this._producer = producer;
         this._debug = opts?.debug ?? false;
         this._needAuth = opts?.needAuth ?? true;
+        this._nodeId = opts?.nodeId ?? this.NODE_ID;
+        this._authServiceEndpoint = authServiceEndpoint;
 
         consumer.setSocketHandler(this);
     }
@@ -97,7 +108,7 @@ class SocketServer {
             JSON.parse(serializedRecord)
         );
 
-        if (deserializedRecord.metadata.nodeId === config.nodeId) {
+        if (deserializedRecord.metadata.nodeId === this._nodeId) {
             return;
         }
 
@@ -109,7 +120,10 @@ class SocketServer {
             `[socket server]: Emit to room ${roomId} message: ${serializedMessage}`
         );
 
-        this._io.to(roomId).emit(SocketEvent.CHAT, serializedMessage);
+        this._io
+            .of(SocketNamespace.MESSAGE)
+            .to(roomId)
+            .emit(SocketEvent.CHAT, serializedMessage);
     }
 
     public listen(): void {
@@ -128,6 +142,8 @@ class SocketServer {
                 this.debug(
                     `[socket server]: A client with ID of ${socket.id} connected`
                 );
+
+                socket.on("message:list", listMessages(this._db));
 
                 socket.on(
                     SocketEvent.JOIN_ROOMS,
@@ -221,7 +237,7 @@ class SocketServer {
 
         socket.to(roomId).emit(SocketEvent.CHAT, serializedMessage);
         this.produceMessage(serializedMessage, {
-            nodeId: config.nodeId,
+            nodeId: this._nodeId,
         });
 
         this.debug(
@@ -263,7 +279,7 @@ class SocketServer {
         token: string,
         next: (err?: ExtendedError) => void
     ): Promise<void> {
-        const res = await fetch(config.authServiceEndpoint, {
+        const res = await fetch(this._authServiceEndpoint, {
             method: "GET",
             headers: {
                 Authorization: `Bearer ${token}`,
@@ -290,6 +306,7 @@ class SocketServer {
         await this._producer.sendMessages({
             topic: TOPIC.CHAT,
             messages: [{value: deserializedRecord}],
+            acks: -1,
         });
     }
 }
