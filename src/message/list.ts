@@ -4,7 +4,7 @@ import {Message, Prisma, PrismaClient} from "@prisma/client";
 type OrderByOption = "id:desc" | "id:asc";
 
 interface Query {
-    conversationId: string;
+    conversationId: bigint;
     after?: bigint;
     size?: number;
     orderBy?: OrderByOption;
@@ -26,7 +26,9 @@ function listMessages(db: PrismaClient) {
     return async (query: Query, callback: CallbackFunction) => {
         const orderBy = query.orderBy ?? "id:desc";
         const [key, value] = orderBy.split(":");
-        const whereQuery: Prisma.MessageWhereInput = {};
+        const whereQuery: Prisma.MessageWhereInput = {
+            receiverId: query.conversationId,
+        };
 
         if (query.after) {
             switch (orderBy) {
@@ -55,7 +57,7 @@ function listMessages(db: PrismaClient) {
             });
 
             const hasMore: boolean =
-                !query.size || messages.length > query.size;
+                query.size !== undefined && messages.length > query.size;
             if (hasMore) {
                 messages.pop();
             }
