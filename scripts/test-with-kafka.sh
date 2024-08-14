@@ -57,6 +57,7 @@ node -e "console.log((require('v8').getHeapStatistics().total_available_size / 1
 echo
 set -x
 
+shopt -s globstar # for ** pattern matching
 eval "${testCommand} ${extraArgs}"
 TEST_EXIT=$?
 echo

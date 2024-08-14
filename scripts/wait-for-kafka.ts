@@ -53,12 +53,15 @@ async function consumerGroupDescribe(containerId: string) {
 
 async function main() {
     console.log("\nFinding container ids...");
-    const c1 = await findContainerId("broker1");
-    const c2 = await findContainerId("broker2");
-    const c3 = await findContainerId("broker3");
+    const b1 = await findContainerId("broker1");
+    const b2 = await findContainerId("broker2");
+    const b3 = await findContainerId("broker3");
+    await findContainerId("controller1");
+    await findContainerId("controller2");
+    await findContainerId("controller3");
 
     console.log("\nWaiting for nodes...");
-    await Promise.all([waitForNode(c1), waitForNode(c2), waitForNode(c3)]);
+    await Promise.all([waitForNode(b1), waitForNode(b2), waitForNode(b3)]);
 
     console.log("\nAll nodes up:");
     const cmd = `docker compose -f ${process.env.COMPOSE_FILE} ps`;
@@ -66,7 +69,7 @@ async function main() {
     console.log(stdout);
 
     console.log("\nCreating default topics...");
-    createTopic(c1, "test-topic-already-exists");
+    createTopic(b1, "test-topic-already-exists");
 
     console.log("\nWarming up Kafka...");
 
@@ -75,11 +78,11 @@ async function main() {
     Array(totalRandomTopics)
         .fill(0)
         .forEach(() => {
-            createTopic(c1, `test-topic-${secureRandom()}`);
+            createTopic(b1, `test-topic-${secureRandom()}`);
         });
 
     console.log("  -> running consumer describe");
-    consumerGroupDescribe(c1);
+    consumerGroupDescribe(b1);
 }
 
-main().then();
+main();
