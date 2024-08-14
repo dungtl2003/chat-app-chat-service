@@ -1,4 +1,16 @@
 services:
+  auth-service:
+    container_name: auth-service
+    image: ilikeblue/chat-app-auth-service:dev-latest
+    labels:
+      - 'custom.project=chat'
+      - 'custom.service=auth'
+    ports:
+      - "8020:80"
+    env_file:
+      - path: ./env/auth.env
+        required: true
+
   controller-1:
     image: apache/kafka:3.8.0
     container_name: controller-1

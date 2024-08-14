@@ -32,11 +32,16 @@ export default () => {
         expressServer.instance(),
         producer,
         consumer,
-        config.clientEndpoint,
-        config.authServiceEndpoint,
         {
             debug: true,
             needAuth: false,
+            authServiceEndpoint: config.authServiceEndpoint,
+            config: {
+                cors: {
+                    origin: config.clientEndpoint,
+                    credentials: true,
+                },
+            },
         }
     );
 

@@ -2,15 +2,17 @@
 
 SCRIPT_DIR=$( cd -- "$( dirname -- "${BASH_SOURCE[0]}" )" &> /dev/null && pwd )
 ROOT_DIR="$SCRIPT_DIR/.."
-ENV_PATH=${ENV_PATH:-"$ROOT_DIR/environments/test/.env"}
+ENV_PATH=${ENV_PATH:-"$ROOT_DIR/.env.test"}
 
 testCommand="$1"
 extraArgs="$2"
 
-export COMPOSE_FILE=${COMPOSE_FILE:="$ROOT_DIR/environments/test/docker-compose.yml"}
+export COMPOSE_FILE=${COMPOSE_FILE:="$ROOT_DIR/tests/docker-compose.yml"}
 export KAFKAJS_DEBUG_PROTOCOL_BUFFERS=${KAFKAJS_DEBUG_PROTOCOL_BUFFERS:=1}
+export SECRETS_DIR=${SECRETS_DIR:="$ROOT_DIR/tests/secrets"}
 
 export_envs() {
+    readarray -t lines < $ENV_PATH
     for line in "${lines[@]}"; do
         printf "export %s\n" $line;
         export $line;
@@ -35,7 +37,17 @@ if [ -z ${DO_NOT_STOP} ]; then
   trap quit ERR
 fi
 
-export_envs
+if [ -f ${ENV_PATH} ]; then
+    echo
+    echo -e "Env file found. Load env file: $ENV_PATH"
+    export_envs
+    echo
+fi
+
+echo
+echo -e "Create certificates"
+$SCRIPT_DIR/create-certs.sh
+echo
 
 if [ -z "$(find_container_id)" ]; then
   echo -e "Start kafka docker container"
@@ -46,7 +58,7 @@ if [ -z "$(find_container_id)" ]; then
   fi
 fi
 
-npx tsx "$SCRIPT_DIR/wait-for-kafka.ts"
+npx tsx "$SCRIPT_DIR/wait-for-services.ts"
 echo
 
 set +x

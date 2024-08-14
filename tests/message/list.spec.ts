@@ -1,6 +1,5 @@
-import {type Socket as ClientSocket} from "socket.io-client";
+import {io as ioc, type Socket as ClientSocket} from "socket.io-client";
 import SocketServer from "@/loaders/socket-server";
-import {setup} from "../utils";
 import {ClientToServerEvents, ServerToClientEvents} from "@/common/types";
 import {
     Conversation,
@@ -16,6 +15,12 @@ import {
 import {assert} from "chai";
 import {serializeMessage} from "@/common/utils";
 import "@/patch";
+import Kafka from "@/loaders/kafka";
+import ExpressServer from "@/loaders/express-server";
+import KafkaProducer from "@/loaders/producer";
+import KafkaConsumer from "@/loaders/consumer";
+import {SocketNamespace, TOPIC} from "@/common/constants";
+import {createTopic} from "../utils";
 
 async function addTempMessages(
     db: PrismaClient,
@@ -59,7 +64,7 @@ async function addTempMessages(
                 id: BigInt(i),
                 senderId: 1n,
                 receiverId: conversationId,
-                message: String(i),
+                content: String(i),
                 type: MessageType.TEXT,
                 createdAt: new Date(),
                 updatedAt: null,
@@ -81,11 +86,18 @@ async function cleanDb(db: PrismaClient) {
 }
 
 describe("message:list", () => {
+    const BROKER_ENDPOINTS = [
+        "localhost:9092",
+        "localhost:10092",
+        "localhost:11092",
+    ];
+
     let socketServer: SocketServer;
+    let producer: KafkaProducer;
+    let consumer: KafkaConsumer;
+    let expressServer: ExpressServer;
 
     let clientSocket: ClientSocket<ServerToClientEvents, ClientToServerEvents>;
-
-    let cleanup: () => Promise<void>;
 
     const db = new PrismaClient();
     const conversationId = 1n;
@@ -93,18 +105,51 @@ describe("message:list", () => {
     let tempMessages: Message[];
 
     before("init services and add temp messages to database", async () => {
-        const result = await setup();
+        const kafka = new Kafka({
+            brokers: BROKER_ENDPOINTS,
+            clientId: "chatservice",
+        });
+        expressServer = new ExpressServer({port: 3000});
+        producer = new KafkaProducer(kafka.instance(), {
+            debug: true,
+        });
+        consumer = new KafkaConsumer(
+            kafka.instance(),
+            {groupId: "1", metadataMaxAge: 0},
+            {debug: true}
+        );
+        socketServer = new SocketServer(
+            expressServer.instance(),
+            producer,
+            consumer,
+            {debug: true}
+        );
 
-        socketServer = result.socketServer1;
-        clientSocket = result.clientSocket1;
-        cleanup = result.cleanup;
+        expressServer.listen();
+        socketServer.listen();
+        await createTopic(TOPIC.CHAT);
+        await producer.startProducing();
+        await consumer.startConsuming({topics: [TOPIC.CHAT]});
+
+        clientSocket = ioc(`http://localhost:3000/${SocketNamespace.MESSAGE}`);
+        await Promise.all([
+            new Promise((resolve) =>
+                clientSocket.on("connect", () => {
+                    resolve("");
+                })
+            ),
+        ]);
 
         await cleanDb(db);
         tempMessages = await addTempMessages(db, conversationId, size);
     });
 
     after("shutdown services and clean database", async () => {
-        await cleanup();
+        clientSocket.disconnect();
+        await producer.disconnect();
+        await consumer.disconnect();
+        socketServer.close();
+
         await cleanDb(db);
     });
 

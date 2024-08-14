@@ -119,7 +119,7 @@ model Message {
     senderId BigInt @db.BigInt 
     receiver Conversation @relation(fields: [receiverId], references: [id], onDelete: Cascade)
     receiverId BigInt @db.BigInt
-    message String @db.Text
+    content String @db.Text
     type MessageType
 
     attachments Attachment[]

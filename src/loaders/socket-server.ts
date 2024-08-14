@@ -4,10 +4,8 @@ import {
     AckMessage,
     SocketEvent,
     SocketNamespace,
-    SocketStatus,
     TOPIC,
 } from "@/common/constants";
-import {ExtendedError} from "socket.io/dist/namespace";
 import {debug, info} from "@/common/console";
 import {EachMessagePayload} from "kafkajs";
 import KafkaProducer from "./producer";
@@ -20,12 +18,14 @@ import {
     SocketData,
 } from "@/common/types";
 import {listMessages} from "@/message/list";
+import auth from "@/auth";
 
 interface Option {
     config?: Partial<ServerOptions>;
     debug?: boolean;
     needAuth?: boolean;
     nodeId?: string;
+    authServiceEndpoint?: string;
 }
 
 interface Metadata {
@@ -48,17 +48,14 @@ class SocketServer {
     >;
     private readonly _producer: KafkaProducer;
     private readonly _debug: boolean;
-    private readonly _needAuth: boolean;
     private readonly _nodeId: string;
-    private readonly _authServiceEndpoint: string;
+    private readonly _authServiceEndpoint: string | undefined;
     private readonly _db: PrismaClient;
 
     public constructor(
         expressServer: ExpressServer,
         producer: KafkaProducer,
         consumer: KafkaConsumer,
-        clientEndpoint: string,
-        authServiceEndpoint: string,
         opts?: Option
     ) {
         this._io = new Server<
@@ -78,8 +75,7 @@ class SocketServer {
             allowEIO3: false,
             allowUpgrades: true,
             cors: {
-                origin: clientEndpoint,
-                credentials: true,
+                origin: "*",
             },
             maxHttpBufferSize: 1e6, // 1 MB
             pingInterval: 25000,
@@ -92,9 +88,8 @@ class SocketServer {
         this._db = new PrismaClient();
         this._producer = producer;
         this._debug = opts?.debug ?? false;
-        this._needAuth = opts?.needAuth ?? true;
         this._nodeId = opts?.nodeId ?? this.NODE_ID;
-        this._authServiceEndpoint = authServiceEndpoint;
+        this._authServiceEndpoint = opts?.authServiceEndpoint;
 
         consumer.setSocketHandler(this);
     }
@@ -129,15 +124,7 @@ class SocketServer {
     public listen(): void {
         this._io
             .of(SocketNamespace.MESSAGE)
-            .use((socket, next) => {
-                if (!this._needAuth) {
-                    next();
-                    return;
-                }
-
-                const token: string = socket.handshake.auth["token"];
-                this.auth(token, next);
-            })
+            .use(auth(this._authServiceEndpoint))
             .on(SocketEvent.CONNECTION, async (socket) => {
                 this.debug(
                     `[socket server]: A client with ID of ${socket.id} connected`
@@ -273,24 +260,6 @@ class SocketServer {
 
     private debug(message?: any, ...optionalParams: any[]): void {
         this._debug && debug(message, ...optionalParams);
-    }
-
-    private async auth(
-        token: string,
-        next: (err?: ExtendedError) => void
-    ): Promise<void> {
-        const res = await fetch(this._authServiceEndpoint, {
-            method: "GET",
-            headers: {
-                Authorization: `Bearer ${token}`,
-            },
-        });
-
-        if (res.status !== 200) {
-            this.debug("[socket server]: Authentication failed");
-            next(new Error(SocketStatus.AUTHORIZATION_FAILED));
-        }
-        next();
     }
 
     private async produceMessage(

@@ -17,16 +17,30 @@ async function findContainerId(node: string): Promise<string> {
     return containerId;
 }
 
-async function waitForNode(containerId: string) {
+async function waitForKafka(containerId: string) {
     const cmd = `docker exec \
       --workdir /opt/kafka/bin/ \
       ${containerId} \
       bash -c "./kafka-topics.sh --bootstrap-server controller-1:9093 --list 2> /dev/null"
-    sleep 5
-  `;
+    sleep 5`;
 
     await execa({shell: true})`${cmd}`;
     console.log(`Kafka container ${containerId} is running`);
+}
+
+async function waitForAuth(containerId: string) {
+    const cmd = `sleep 15 && docker exec \
+      ${containerId} \
+      sh -c "wget -q -O - http://auth-service/actuator/health"`;
+
+    const {stdout: status} = await execa({shell: true})`${cmd}`;
+    console.log("output: ", status);
+    if (JSON.parse(status.trim()).status.trim() === "UP") {
+        console.log(`Auth service container ${containerId} is running`);
+    } else {
+        console.log(`Auth service container ${containerId} is not running`);
+        throw new Error();
+    }
 }
 
 async function createTopic(containerId: string, topicName: string) {
@@ -60,8 +74,15 @@ async function main() {
     await findContainerId("controller2");
     await findContainerId("controller3");
 
+    const auth = await findContainerId("auth");
+
     console.log("\nWaiting for nodes...");
-    await Promise.all([waitForNode(b1), waitForNode(b2), waitForNode(b3)]);
+    await Promise.all([
+        waitForKafka(b1),
+        waitForKafka(b2),
+        waitForKafka(b3),
+        waitForAuth(auth),
+    ]);
 
     console.log("\nAll nodes up:");
     const cmd = `docker compose -f ${process.env.COMPOSE_FILE} ps`;
